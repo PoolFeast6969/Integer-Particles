@@ -1,12 +1,35 @@
+#Pygame imports
+import pygame
+import math
+import sys
+import time
+import random
+from pygame.locals import *
+
 from timeit import default_timer as current_time
 import time
+from random import randint as random_integer
+
+pygame.init()
+
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 500
+FRAMES_PER_SECOND = 60
+
+#Sets up the screen for the particles to be drawn onto
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 class Particle:
+    """ Particle class represents a point on a 2D plane that is accelerated by forces and interacts with other Particles """
+
     def __init__(self, mass=600, X_velocity=0, Y_velocity=0, X_position=0, Y_position=0):
         self.mass = mass
         self.position = {'x':X_position,'y':Y_position}
         self.velocity = {'x':X_velocity,'y':Y_velocity}
         self.time_of_last_update = {'x':current_time(),'y':current_time()}
+
+    def __str__(self):
+        return str(self.position) #+ str(self.velocity)
 
     def update(self):
         for axis in self.position:
@@ -14,17 +37,54 @@ class Particle:
             elapsed_time = current_time() - self.time_of_last_update[axis]
             # Calculate acceleration
             # acceleration = force[axis] / self.mass
-            acceleration = -10
+            acceleration = -1
             # Calculate velocity
             self.velocity[axis] = self.velocity[axis] + ( acceleration * elapsed_time )
             # Change position
             if (elapsed_time >= 1 / abs( self.velocity[axis] )):
+                # Collision detection
                 self.position[axis] = self.position[axis] + int( elapsed_time * self.velocity[axis] )
                 self.time_of_last_update[axis] = current_time()
-            print("Position: " + str( self.position ), end="\r")
 
-cool_particle = Particle(X_velocity=75,Y_position=100)
+    #Called every frame to draw the particle onto the screen
+    def draw(self):
+        pygame.draw.circle(screen, (255, 0, 0), (self.position['x'], self.position['y']), 3)
 
-while (None is None):
-    cool_particle.update()
-    time.sleep(1/60)
+
+plane = [Particle(X_velocity=random_integer(-10, 10), Y_position=random_integer(-1000, 1000), Y_velocity=random_integer(-10, 10), X_position=random_integer(-1000, 1000)) for count in range(30)]
+
+TIMER = 0
+
+#Main game loop that repeats forevar
+while True:
+
+    #Covers the screen in black for every frame
+    screen.fill((0, 0, 0))
+
+    #Allows you to quit
+    for event in pygame.event.get():
+
+        if event.type == pygame.QUIT:
+
+            pygame.quit()
+            sys.exit()
+
+    pressed_keys = pygame.key.get_pressed()
+    #Allows you to quit
+    if pressed_keys[K_ESCAPE]:
+
+        pygame.quit()
+        sys.exit()
+
+    #Loops through the particles, updates, and draws them
+    for particle in plane:
+        particle.update()
+        particle.draw()
+        print(particle)
+
+    #Updates the pygame display
+    pygame.display.update()
+
+    time.sleep(1 / FRAMES_PER_SECOND)
+    TIMER += 1 / FRAMES_PER_SECOND
+
