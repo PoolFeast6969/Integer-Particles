@@ -1,8 +1,7 @@
 from timeit import default_timer as current_time
 from random import randint as random_integer
-from threading import Thread
+from threading import Thread, Event
 import numpy
-
 
 class Particle:
     """ Particle class represents an indivisable object on a 2D self.plane that is accelerated by forces and interacts with other Particles """
@@ -39,18 +38,18 @@ class Physics_Thread (Thread):
         self.plane = numpy.empty((1000, 1000), dtype = object)
         for count in range(5):
             self.plane[random_integer(10, 999),count] = Particle(X_velocity=random_integer(-10, 10), Y_velocity=random_integer(-10, 10))
-        self.run_signal = True
 
     def run(self):
+        self.run_signal = True
         print('Running ' + str( self.__class__.__name__ ))
         while self.run_signal is True:
+            # Find particles and output their position in the array
             particle_indexs = numpy.argwhere(self.plane)
             for particle in particle_indexs:
+                # Wastefully convert the format of the postion (id like to get rid of this)
                 position = {'x':particle[0], 'y':particle[1]}
+                # Calculate the postion the particle should be in (could do without this as well)
                 calculated_position = self.plane[position['x'], position['y']].update(X_position=position['x'], Y_position=position['y'])
-                print(position, end='\r')
                 if (calculated_position is not position):
+                    # Swap the data from the current postion to the calculated position
                     self.plane[position['x'], position['y']], self.plane[calculated_position['x'], calculated_position['y']] = self.plane[calculated_position['x'], calculated_position['y']], self.plane[position['x'], position['y']]
-
-
-Physics_Thread().start()
