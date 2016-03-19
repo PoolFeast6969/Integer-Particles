@@ -14,7 +14,7 @@ class Particle:
     def __str__(self):
         return str(self.velocity)
 
-    def update(self, X_position=0, Y_position=0):
+    def update(self, plane, X_position, Y_position):
         position = {'x':X_position,'y':Y_position}
         for axis in position:
             # Calculate time since update was last run
@@ -26,11 +26,12 @@ class Particle:
             self.velocity[axis] = self.velocity[axis] + ( acceleration * elapsed_time )
             # Change position if needed
             if (elapsed_time >= 1 / abs( self.velocity[axis] )):
+                # Calculate new postion
                 position[axis] = position[axis] + int( elapsed_time * self.velocity[axis] )
                 #Reset the timer
                 self.time_of_last_update[axis] = current_time()
-        return position
-
+        # Swap the data from the current postion to the calculated position
+        plane[position['x'], position['y']], plane[X_position, Y_position] = plane[X_position, Y_position], plane[position['x'], position['y']]
 
 class Physics_Thread (Thread):
     def __init__(self):
@@ -45,11 +46,6 @@ class Physics_Thread (Thread):
         while self.run_signal is True:
             # Find particles and output their position in the array
             particle_indexs = numpy.argwhere(self.plane)
+            # Update each particle individualy
             for particle in particle_indexs:
-                # Wastefully convert the format of the postion (id like to get rid of this)
-                position = {'x':particle[0], 'y':particle[1]}
-                # Calculate the postion the particle should be in (could do without this as well)
-                calculated_position = self.plane[position['x'], position['y']].update(X_position=position['x'], Y_position=position['y'])
-                if (calculated_position is not position):
-                    # Swap the data from the current postion to the calculated position
-                    self.plane[position['x'], position['y']], self.plane[calculated_position['x'], calculated_position['y']] = self.plane[calculated_position['x'], calculated_position['y']], self.plane[position['x'], position['y']]
+                self.plane[particle[0], particle[1]].update(self.plane, particle[0], particle[1])
