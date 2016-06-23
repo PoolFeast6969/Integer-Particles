@@ -34,8 +34,9 @@ class Particle:
 class World (Process):
     """ A group of particles that can interact with each other """
 
-    def __init__(self, plane, worker_amount=None, update_rate=30):
+    def __init__(self, plane, pipe, worker_amount=None, update_rate=30):
         Process.__init__(self)
+        self.pipe = pipe
         self.plane = plane
         self.workers = Pool(processes=worker_amount)
         self.update_interval = 1/update_rate
@@ -47,6 +48,8 @@ class World (Process):
             # Update each particle
             for particle in self.plane:
                 particle.update()
+            # Send to Graphics
+            self.pipe.send(self.plane)
             # Sleep to maintain update rate
             update_delay = previous_update + self.update_interval - current_time()
             previous_update = current_time()
