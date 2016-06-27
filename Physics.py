@@ -14,16 +14,14 @@ class Particle:
         self.velocity = {'x':X_velocity,'y':Y_velocity}
         self.position = {'x':X_position,'y':Y_position}
         self.time_of_last_update = {'x':current_time(),'y':current_time()}
+        self.acceleration = {'x':0,'y':-9.81}
 
     def update(self):
         for axis in self.position:
             # Calculate time since update was last run
             elapsed_time = current_time() - self.time_of_last_update[axis]
-            # Calculate acceleration
-            # acceleration = force[axis] / self.mass
-            acceleration = -1
             # Calculate velocity
-            self.velocity[axis] = self.velocity[axis] + ( acceleration * elapsed_time )
+            self.velocity[axis] = self.velocity[axis] + ( self.acceleration[axis] * elapsed_time )
             # Change position if needed
             if (elapsed_time >= 1 / abs( self.velocity[axis] )):
                 # Calculate new postion
@@ -34,13 +32,12 @@ class Particle:
 class World (Process):
     """ A group of particles that can interact with each other """
 
-    def __init__(self, plane, pipe, worker_amount=None, update_rate=30):
+    def __init__(self, plane, worker_amount=None, update_rate=30):
         Process.__init__(self)
-        self.pipe = pipe
         self.plane = plane
         self.workers = Pool(processes=worker_amount)
         self.update_interval = 1/update_rate
-        logger.info('Created World with %s updates per second', update_rate)
+        logger.info('Initialised World')
 
     def run(self):
         previous_update = current_time()
@@ -48,8 +45,6 @@ class World (Process):
             # Update each particle
             for particle in self.plane:
                 particle.update()
-            # Send to Graphics
-            self.pipe.send(self.plane)
             # Sleep to maintain update rate
             update_delay = previous_update + self.update_interval - current_time()
             previous_update = current_time()
