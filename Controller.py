@@ -8,7 +8,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Make up some shit to simulate
-particle_amount = 100
+particle_amount = 2000
 random_plane = [Particle(X_position=random_integer(10, 999), Y_position=random_integer(10, 999), X_velocity=random_integer(-10, 10), Y_velocity=random_integer(-10, 10)) for count in range(particle_amount)]
 logger.info('Created plane with %s particles', particle_amount)
 
