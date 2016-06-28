@@ -23,7 +23,11 @@ class Particle:
             # Calculate velocity
             self.velocity[axis] = self.velocity[axis] + ( self.acceleration[axis] * elapsed_time )
             # Change position if needed
-            if (elapsed_time >= 1 / abs( self.velocity[axis] )):
+            try:
+                inverse_velocity = 1 / abs( self.velocity[axis] )
+            except ZeroDivisionError:
+                inverse_velocity = 0
+            if (elapsed_time >= inverse_velocity):
                 # Calculate new postion
                 self.position[axis] = self.position[axis] + int( elapsed_time * self.velocity[axis] )
                 # Reset the timer
