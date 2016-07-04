@@ -17,17 +17,21 @@ logger.info('Created plane with %s particles', particle_amount)
 # Initialise the physics stuff
 from Physics import World
 Jacks_sweet_thread = World(random_plane)
+logger.info('Initialised World')
 
 # Initialise Window
 import sys
 from PyQt5.QtWidgets import QApplication
 from GUI import Window
 app = QApplication(sys.argv) # ????
-window = Window(random_plane)
+jacks_okay_window = Window(random_plane)
+logger.info('Initialised Window')
 
 # Start things
 Jacks_sweet_thread.start()
-window.show()
+logger.info('Running Physics')
+jacks_okay_window.show()
+logger.info('Running window')
 
 # ????????????
 sys.exit(app.exec_()) # ??????

@@ -36,15 +36,13 @@ class Particle:
 class World (Process):
     """ A group of particles that can interact with each other """
 
-    def __init__(self, plane, worker_amount=None, update_rate=60):
+    def __init__(self, plane, worker_amount=None, update_rate=10):
         Process.__init__(self)
         self.plane = plane
         self.workers = Pool(processes=worker_amount)
         self.update_interval = 1/update_rate
-        logger.info('Initialised World')
 
     def run(self):
-        logger.info('Running Physics')
         previous_update = current_time()
         while True:
             # Update each particle
