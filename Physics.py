@@ -14,7 +14,7 @@ class Particle:
         self.velocity = {'x':X_velocity,'y':Y_velocity}
         self.position = {'x':X_position,'y':Y_position}
         self.time_of_last_update = {'x':current_time(),'y':current_time()}
-        self.acceleration = {'x':0,'y':-9.81}
+        self.acceleration = {'x':0,'y':9.81}
 
     def update(self):
         for axis in self.position:
@@ -36,10 +36,10 @@ class Particle:
 class World (Process):
     """ A group of particles that can interact with each other """
 
-    def __init__(self, plane, worker_amount=None, update_rate=10):
+    def __init__(self, plane, send, update_rate=60):
         Process.__init__(self)
         self.plane = plane
-        self.workers = Pool(processes=worker_amount)
+        self.send = send
         self.update_interval = 1/update_rate
 
     def run(self):
@@ -48,7 +48,11 @@ class World (Process):
             # Update each particle
             for particle in self.plane:
                 particle.update()
+
+            self.send.send(self.plane)
             # Sleep to maintain update rate
             update_delay = previous_update + self.update_interval - current_time()
+            fps = 1/(current_time() - previous_update)
+            print("Physics FPS: " + str(fps), end="\r")
             previous_update = current_time()
             sleep(max(0, update_delay))
