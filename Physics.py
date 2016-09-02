@@ -49,7 +49,13 @@ class World (Process):
             for particle in self.plane:
                 particle.update()
 
+            # stuff and things
             self.send.send(self.plane)
+
+            # Show FPS
+            fps = 1/(current_time() - previous_update)
+            print("Physics FPS: " + str(fps), end="\r")
+
             # Sleep to maintain update rate
             update_delay = previous_update + self.update_interval - current_time()
             fps = 1/(current_time() - previous_update)
