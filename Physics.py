@@ -1,5 +1,5 @@
 from timeit import default_timer as current_time
-from multiprocessing import Process, Pool
+from multiprocessing import Process, Event
 from time import sleep
 
 import logging
@@ -14,7 +14,7 @@ class Particle:
         self.velocity = {'x':X_velocity,'y':Y_velocity}
         self.position = {'x':X_position,'y':Y_position}
         self.time_of_last_update = {'x':current_time(),'y':current_time()}
-        self.acceleration = {'x':0,'y':9.81}
+        self.acceleration = {'x':0,'y':90.81}
 
     def update(self):
         for axis in self.position:
@@ -22,29 +22,46 @@ class Particle:
             elapsed_time = current_time() - self.time_of_last_update[axis]
             # Calculate velocity
             self.velocity[axis] = self.velocity[axis] + ( self.acceleration[axis] * elapsed_time )
-            # Change position if needed
+            # Calculate acceleration toward center
+            # self.acceleration[axis] = -(self.position[axis] - 500)
+            # Edge bouncing
+            if not (0 <= self.position[axis] <= 1000):
+                self.velocity[axis] = -self.velocity[axis]/2
+                # Teleport back inside displayed range
+                if (self.position[axis] > 500):
+                    self.position[axis] = 1000
+                else:
+                    self.position[axis] = 0
+            # Determine if position needed
             try:
                 inverse_velocity = 1 / abs( self.velocity[axis] )
             except ZeroDivisionError:
                 inverse_velocity = 0
             if (elapsed_time >= inverse_velocity):
-                # Calculate new postion
-                self.position[axis] = self.position[axis] + int( elapsed_time * self.velocity[axis] )
+                # Move to new position
+                self.position[axis] = self.position[axis] + round( elapsed_time * self.velocity[axis] )
                 # Reset the timer
                 self.time_of_last_update[axis] = current_time()
 
 class World (Process):
     """ A group of particles that can interact with each other """
 
-    def __init__(self, plane, send, update_rate=60):
+    def __init__(self, plane, send, update_rate=200):
         Process.__init__(self)
         self.plane = plane
         self.send = send
         self.update_interval = 1/update_rate
+        self.exit = Event()
+        logger.info('Initialised')
+
+    def terminate(self):
+        logger.info('Exiting')
+        self.exit.set()
 
     def run(self):
+        logger.info('Running')
         previous_update = current_time()
-        while True:
+        while not self.exit.is_set():
             # Update each particle
             for particle in self.plane:
                 particle.update()
@@ -52,13 +69,7 @@ class World (Process):
             # stuff and things
             self.send.send(self.plane)
 
-            # Show FPS
-            fps = 1/(current_time() - previous_update)
-            print("Physics FPS: " + str(fps), end="\r")
-
             # Sleep to maintain update rate
-            update_delay = previous_update + self.update_interval - current_time()
-            fps = 1/(current_time() - previous_update)
-            print("Physics FPS: " + str(fps), end="\r")
+            update_delay = self.update_interval - (current_time() - previous_update)
             previous_update = current_time()
             sleep(max(0, update_delay))
