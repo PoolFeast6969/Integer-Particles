@@ -20,24 +20,24 @@ class Particle:
         for axis in self.position:
             # Calculate time since update was last run
             elapsed_time = current_time() - self.time_of_last_update[axis]
-            # Calculate velocity
-            self.velocity[axis] = self.velocity[axis] + ( self.acceleration[axis] * elapsed_time )
-            # Calculate acceleration toward center
-            # self.acceleration[axis] = -(self.position[axis] - 500)
-            # Edge bouncing
-            if not (0 <= self.position[axis] <= 1000):
-                self.velocity[axis] = -self.velocity[axis]/2
-                # Teleport back inside displayed range
-                if (self.position[axis] > 500):
-                    self.position[axis] = 1000
-                else:
-                    self.position[axis] = 0
-            # Determine if position needed
+            # Determine if position change needed
             try:
-                inverse_velocity = 1 / abs( self.velocity[axis] )
+                inverse_velocity = 1 / abs( self.velocity[axis] + self.acceleration[axis] * elapsed_time )
             except ZeroDivisionError:
                 inverse_velocity = 0
             if (elapsed_time >= inverse_velocity):
+                # Calculate acceleration toward center
+                self.acceleration[axis] = -(self.position[axis] - 500)
+                # Calculate velocity
+                self.velocity[axis] = self.velocity[axis] + self.acceleration[axis] * elapsed_time
+                # Edge bouncing
+                if not (0 <= self.position[axis] <= 1000):
+                    self.velocity[axis] = -self.velocity[axis]/1.7
+                    # Teleport back inside displayed range
+                    if (self.position[axis] > 500):
+                        self.position[axis] = 1000
+                    else:
+                        self.position[axis] = 0
                 # Move to new position
                 self.position[axis] = self.position[axis] + round( elapsed_time * self.velocity[axis] )
                 # Reset the timer
@@ -46,17 +46,13 @@ class Particle:
 class World (Process):
     """ A group of particles that can interact with each other """
 
-    def __init__(self, plane, send, update_rate=200):
+    def __init__(self, plane, send, update_rate=60):
         Process.__init__(self)
         self.plane = plane
         self.send = send
         self.update_interval = 1/update_rate
         self.exit = Event()
         logger.info('Initialised')
-
-    def terminate(self):
-        logger.info('Exiting')
-        self.exit.set()
 
     def run(self):
         logger.info('Running')
@@ -73,3 +69,7 @@ class World (Process):
             update_delay = self.update_interval - (current_time() - previous_update)
             previous_update = current_time()
             sleep(max(0, update_delay))
+
+    def terminate(self):
+        logger.info('Exiting')
+        self.exit.set()

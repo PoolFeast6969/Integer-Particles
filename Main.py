@@ -12,8 +12,8 @@ from random import randint as random_integer
 # Some config width height settings
 width = 1000
 height = 1000
-particle_amount = 10
-random_plane = [Particle(X_position=random_integer(0, width), Y_position=random_integer(0, height), X_velocity=random_integer(-5000, 5000), Y_velocity=random_integer(-5000, 5000)) for count in range(particle_amount)]
+particle_amount = 200
+random_plane = [Particle(X_position=random_integer(0, width), Y_position=random_integer(0, height), X_velocity=random_integer(-500, 500), Y_velocity=random_integer(-500, 500)) for count in range(particle_amount)]
 logger.info('Created plane with %s particles', particle_amount)
 
 # Start the display
@@ -21,7 +21,7 @@ import pygame
 from pygame.locals import *
 pygame.init()
 clock = pygame.time.Clock()
-screen = pygame.display.set_mode((height ,width))
+screen = pygame.display.set_mode((width, height))
 
 # Initialise the physics stuff
 from Physics import World
@@ -34,9 +34,9 @@ from time import sleep
 import ctypes
 import numpy as np
 
-pixel_array_base = Array(ctypes.c_int, height*width)
+pixel_array_base = Array(ctypes.c_int, width*height)
 pixel_array = np.ctypeslib.as_array(pixel_array_base.get_obj())
-pixel_array = pixel_array.reshape(height, width)
+pixel_array = pixel_array.reshape(width, height)
 
 from pygametranslator import Translator
 Jacks_sweet_threads = Translator(recv, pixel_array)

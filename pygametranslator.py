@@ -27,9 +27,10 @@ class Translator (Process):
 
     def run(self):
         logger.info('Running')
-        initial_color = 6215470
+        color = 993366
         while not self.exit.is_set():
+            temp_color = color
             for particle in self.recv.recv():
-                initial_color = initial_color + 1234
+                temp_color = temp_color + 1234
                 if (0 < particle.position['x'] < 1000) and (0 < particle.position['y'] < 1000):
-                    self.pixel_array[particle.position['x'], particle.position['y']] = initial_color
+                    self.pixel_array[particle.position['x'], particle.position['y']] = temp_color
