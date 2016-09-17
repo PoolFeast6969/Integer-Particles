@@ -27,7 +27,7 @@ class Translator (Process):
 
     def run(self):
         logger.info('Running')
-        color = 993366
+        color = 6000000
         while not self.exit.is_set():
             temp_color = color
             for particle in self.recv.recv():

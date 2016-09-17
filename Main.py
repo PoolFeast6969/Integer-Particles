@@ -12,7 +12,7 @@ from random import randint as random_integer
 # Some config width height settings
 width = 1000
 height = 1000
-particle_amount = 200
+particle_amount = 5
 random_plane = [Particle(X_position=random_integer(0, width), Y_position=random_integer(0, height), X_velocity=random_integer(-500, 500), Y_velocity=random_integer(-500, 500)) for count in range(particle_amount)]
 logger.info('Created plane with %s particles', particle_amount)
 
@@ -44,8 +44,9 @@ Jacks_sweet_threads = Translator(recv, pixel_array)
 # Start things
 Jacks_sweet_thread.start()
 Jacks_sweet_threads.start()
-
+update_interval = 1/60
 running = True
+previous_update = current_time()
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -55,6 +56,11 @@ while running:
     pygame.display.flip()
     clock.tick()
     pygame.display.set_caption('FPS: ' + str(int(clock.get_fps())))
+
+    # Sleep to maintain update rate
+    update_delay = update_interval - (current_time() - previous_update)
+    previous_update = current_time()
+    sleep(max(0, update_delay))
 
 logger.info('Exiting')
 pygame.display.quit()

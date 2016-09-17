@@ -32,16 +32,18 @@ class Particle:
                 self.velocity[axis] = self.velocity[axis] + self.acceleration[axis] * elapsed_time
                 # Edge bouncing
                 if not (0 <= self.position[axis] <= 1000):
-                    self.velocity[axis] = -self.velocity[axis]/1.7
+                    self.velocity[axis] = -self.velocity[axis]/1.1
                     # Teleport back inside displayed range
                     if (self.position[axis] > 500):
                         self.position[axis] = 1000
                     else:
                         self.position[axis] = 0
                 # Move to new position
-                self.position[axis] = self.position[axis] + round( elapsed_time * self.velocity[axis] )
-                # Reset the timer
-                self.time_of_last_update[axis] = current_time()
+                self.position[axis] = self.position[axis] + int(elapsed_time * self.velocity[axis])
+                # Calculate position accuracy lost due to rounding
+                lost_position = ((elapsed_time * self.velocity[axis]) - int(elapsed_time * self.velocity[axis]))
+                # Reset the timer and adjust time for loss of position
+                self.time_of_last_update[axis] = current_time() - lost_position * 1/self.velocity[axis]
 
 class World (Process):
     """ A group of particles that can interact with each other """
