@@ -2,76 +2,52 @@ from timeit import default_timer as current_time
 from multiprocessing import Process, Event
 from time import sleep
 
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class Physics_Thread (Process):
+    """ A group of particles"""
 
-class Particle:
-    """ An indivisable object on a 2D plane that is accelerated by forces """
-
-    def __init__(self, X_position, Y_position, X_velocity=0 ,Y_velocity=0, mass=600):
-        self.mass = mass
-        self.velocity = {'x':X_velocity,'y':Y_velocity}
-        self.position = {'x':X_position,'y':Y_position}
-        self.time_of_last_update = {'x':current_time(),'y':current_time()}
-        self.acceleration = {'x':0,'y':90.81}
-
-    def update(self):
-        for axis in self.position:
-            # Calculate time since update was last run
-            elapsed_time = current_time() - self.time_of_last_update[axis]
-            # Determine if position change needed
-            try:
-                inverse_velocity = 1 / abs( self.velocity[axis] + self.acceleration[axis] * elapsed_time )
-            except ZeroDivisionError:
-                inverse_velocity = 0
-            if (elapsed_time >= inverse_velocity):
-                # Calculate acceleration toward center
-                self.acceleration[axis] = -(self.position[axis] - 500)
-                # Calculate velocity
-                self.velocity[axis] = self.velocity[axis] + self.acceleration[axis] * elapsed_time
-                # Edge bouncing
-                if not (0 <= self.position[axis] <= 1000):
-                    self.velocity[axis] = -self.velocity[axis]/1.1
-                    # Teleport back inside displayed range
-                    if (self.position[axis] > 500):
-                        self.position[axis] = 1000
-                    else:
-                        self.position[axis] = 0
-                # Move to new position
-                self.position[axis] = self.position[axis] + int(elapsed_time * self.velocity[axis])
-                # Calculate position accuracy lost due to rounding
-                lost_position = ((elapsed_time * self.velocity[axis]) - int(elapsed_time * self.velocity[axis]))
-                # Reset the timer and adjust time for loss of position
-                self.time_of_last_update[axis] = current_time() - lost_position * 1/self.velocity[axis]
-
-class World (Process):
-    """ A group of particles that can interact with each other """
-
-    def __init__(self, plane, send, update_rate=60):
+    def __init__(self, frame_queue, position, velocity, time_since_update):
         Process.__init__(self)
-        self.plane = plane
-        self.send = send
-        self.update_interval = 1/update_rate
         self.exit = Event()
-        logger.info('Initialised')
+        self.frame = frame_queue
+        self.position = position
+        self.velocity = velocity
+        self.time_since_update = time_since_update
+        print(self.name+' Initialised')
 
     def run(self):
-        logger.info('Running')
-        previous_update = current_time()
+        for axis in self.time_since_update:
+            for particle in self.time_since_update[axis]:
+                particle = current_time()
+        print(self.time_since_update['x'][:])
         while not self.exit.is_set():
-            # Update each particle
-            for particle in self.plane:
-                particle.update()
-
-            # stuff and things
-            self.send.send(self.plane)
-
-            # Sleep to maintain update rate
-            update_delay = self.update_interval - (current_time() - previous_update)
-            previous_update = current_time()
-            sleep(max(0, update_delay))
+            particles_to_update = self.frame.get()
+            for particle in particles_to_update:
+                        for axis in self.position:
+                            # Calculate time since particle was last updated
+                            elapsed_time = current_time() - self.time_since_update[axis][particle]
+                            # Determine if a position change is needed
+                            try:
+                                inverse_velocity = 1 / (self.velocity[axis][particle] + 9.81 * elapsed_time)
+                            except ZeroDivisionError:
+                                inverse_velocity = 0
+                            if (elapsed_time >= abs(inverse_velocity)):
+                                # Calculate velocity
+                                self.velocity[axis][particle] = self.velocity[axis][particle] + 9.81 * elapsed_time
+                                # Edge bouncing
+                                if not (0 <= self.position[axis][particle] <= 1000):
+                                    self.velocity[axis][particle] = -self.velocity[axis][particle]/1.1
+                                    # Teleport back inside displayed range
+                                    if (self.position[axis][particle] > 500):
+                                        self.position[axis][particle] = 1000
+                                    else:
+                                        self.position[axis][particle] = 0
+                                # Move to new position
+                                self.position[axis][particle] = self.position[axis][particle] + int(elapsed_time * self.velocity[axis][particle])
+                                # Calculate position accuracy lost due to rounding
+                                lost_position = elapsed_time * self.velocity[axis][particle] - int(elapsed_time * self.velocity[axis][particle])
+                                # Reset the timer and adjust time for loss of position
+                                self.time_since_update[axis][particle] = current_time() - lost_position / self.velocity[axis][particle]
 
     def terminate(self):
-        logger.info('Exiting')
+        print(self.name+' Exiting')
         self.exit.set()
