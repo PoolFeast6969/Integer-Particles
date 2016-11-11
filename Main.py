@@ -1,12 +1,12 @@
 # Create particles in shared memory
-number_of_particles = 100
+number_of_particles = 100000
 width = 1000
 height = 1000
 from multiprocessing import RawArray
 position = {'x':RawArray('i', number_of_particles),'y':RawArray('i', number_of_particles)}
-velocity = {'x':RawArray('f', number_of_particles),'y':RawArray('f', number_of_particles)}
-time_since_update = {'x':RawArray('f', number_of_particles),'y':RawArray('f', number_of_particles)}
-acceleration = {'x':RawArray('f', number_of_particles),'y':RawArray('f', number_of_particles)}
+velocity = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
+time_since_update = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
+acceleration = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
 # Set acceleration
 for particle in range(len(acceleration['y'])):
     acceleration['y'][particle] = 9.81

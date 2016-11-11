@@ -30,16 +30,8 @@ class Physics_Thread (Process):
                     if (elapsed_time >= abs(inverse_velocity)):
                         # Calculate velocity
                         self.velocity[axis][particle] = self.velocity[axis][particle] + self.acceleration[axis][particle] * elapsed_time
-                        # Move to new position
-                        self.position[axis][particle] = self.position[axis][particle] + int(elapsed_time * self.velocity[axis][particle])
-                        # Edge bouncing
-                        if not (0 <= self.position[axis][particle] <= 999):
-                            self.velocity[axis][particle] = self.velocity[axis][particle]/-1.1
-                            # Teleport back inside displayed range
-                            if (self.position[axis][particle] > 500):
-                                self.position[axis][particle] = 999
-                            else:
-                                self.position[axis][particle] = 0
+                        # Calculate new position
+                        new_position = self.position[axis][particle] + int(elapsed_time * self.velocity[axis][particle])
                         # Calculate position accuracy lost due to rounding
                         lost_position = elapsed_time * self.velocity[axis][particle] - int(elapsed_time * self.velocity[axis][particle])
                         # Reset the timer and adjust time for loss of position
@@ -47,6 +39,16 @@ class Physics_Thread (Process):
                             self.time_since_update[axis][particle] = current_time() - lost_position / self.velocity[axis][particle]
                         except ZeroDivisionError:
                             self.time_since_update[axis][particle] = current_time()
+                        # Edge bouncing
+                        if not (0 <= new_position <= 999):
+                            self.velocity[axis][particle] = self.velocity[axis][particle]/-1.1
+                            # Teleport back inside displayed range
+                            if (new_position > 500):
+                                self.position[axis][particle] = 999
+                            else:
+                                self.position[axis][particle] = 0
+                        else:
+                            self.position[axis][particle] = new_position
     def terminate(self):
         print(self.name+' Exiting')
         self.exit.set()
