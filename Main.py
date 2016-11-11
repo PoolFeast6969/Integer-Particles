@@ -1,5 +1,5 @@
 # Create particles in shared memory
-number_of_particles = 100000
+number_of_particles = 10
 width = 1000
 height = 1000
 from multiprocessing import RawArray
@@ -7,15 +7,22 @@ position = {'x':RawArray('i', number_of_particles),'y':RawArray('i', number_of_p
 velocity = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
 time_since_update = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
 acceleration = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
+# Set position
+for particle in range(len(position['y'])):
+    position['y'][particle] = 500
+for particle in range(len(acceleration['x'])):
+    position['x'][particle] = 500
 # Set acceleration
 for particle in range(len(acceleration['y'])):
-    acceleration['y'][particle] = 9.81
+    acceleration['y'][particle] = 98.1
 for particle in range(len(acceleration['x'])):
     acceleration['x'][particle] = 0
-# Randomise sideways velocity
+# Randomise velocity
 from random import randint as random_integer
 for particle in range(len(velocity['x'])):
-    velocity['x'][particle] = random_integer(-1000,1000)
+    velocity['x'][particle] = random_integer(-100000,100000)/100
+for particle in range(len(velocity['y'])):
+    velocity['y'][particle] = random_integer(-100000,100000)/100
 
 # Initialise physics threads
 frame_queue = {}
@@ -56,16 +63,16 @@ while running:
     # Request new frame
     for cpu_core in range(cpu_count()):
         frame_queue[cpu_core].put(list(range(round(number_of_particles/cpu_count()*(cpu_core)), round(number_of_particles/cpu_count()*(cpu_core+1)))))
-    # Add to pygame array
-    pixel_array = copy(blank_array)
-    pixel_array[position['x'], position['y']] = 6000000
-    # Update display
-    pygame.surfarray.blit_array(screen, pixel_array)
-    pygame.display.flip()
     # Sleep to maintain update rate
     update_delay = update_interval - (current_time() - previous_update)
     previous_update = current_time()
     sleep(max(0, update_delay))
+    # Add to pygame display array
+    pixel_array = copy(blank_array)
+    pixel_array[position['x'], position['y']] = 99999999
+    # Update display
+    pygame.surfarray.blit_array(screen, pixel_array)
+    pygame.display.flip()
 
 # End physics threads
 for process in phyics_process.values():
