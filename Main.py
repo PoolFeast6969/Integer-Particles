@@ -1,11 +1,11 @@
 # Create particles in shared memory
-number_of_particles = 10
+number_of_particles = 1
 width = 1000
 height = 1000
 from multiprocessing import RawArray
 position = {'x':RawArray('i', number_of_particles),'y':RawArray('i', number_of_particles)}
 velocity = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
-time_since_update = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
+time_of_update = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
 acceleration = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
 # Set position
 for particle in range(len(position['y'])):
@@ -17,12 +17,6 @@ for particle in range(len(acceleration['y'])):
     acceleration['y'][particle] = 98.1
 for particle in range(len(acceleration['x'])):
     acceleration['x'][particle] = 0
-# Randomise velocity
-from random import randint as random_integer
-for particle in range(len(velocity['x'])):
-    velocity['x'][particle] = random_integer(-100000,100000)/100
-for particle in range(len(velocity['y'])):
-    velocity['y'][particle] = random_integer(-100000,100000)/100
 
 # Initialise physics threads
 frame_queue = {}
@@ -31,7 +25,7 @@ from Physics import Physics_Thread
 from multiprocessing import Queue, cpu_count
 for cpu_core in range(cpu_count()):
     frame_queue[cpu_core] = Queue()
-    phyics_process[cpu_core] = Physics_Thread(frame_queue[cpu_core], position, velocity, time_since_update, acceleration)
+    phyics_process[cpu_core] = Physics_Thread(frame_queue[cpu_core], position, velocity, time_of_update, acceleration)
 
 # Initialise display
 import pygame
@@ -50,9 +44,9 @@ update_interval = 1/60
 running = True
 blank_array = empty((width,height))
 # Update the time since update to just before it starts
-for axis in time_since_update:
-    for particle in range(len(time_since_update[axis])):
-        time_since_update[axis][particle] = current_time()
+for axis in time_of_update:
+    for particle in range(len(time_of_update[axis])):
+        time_of_update[axis][particle] = current_time()
 previous_update = current_time()
 # Main loop
 while running:
