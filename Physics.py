@@ -3,7 +3,7 @@ from multiprocessing import Process, Event
 from time import sleep
 
 class Physics_Thread (Process):
-    """ A group of particles"""
+    """ A group of particles that do things when stuff happens"""
 
     def __init__(self, frame_queue, position, velocity, time_of_update, acceleration):
         Process.__init__(self)
@@ -81,10 +81,11 @@ class Physics_Thread (Process):
                             y += sy
                             positions_traversed.append([x, y])
                     # Check those positions for stuff
-                    for position in positions_traversed:
-                        print(position)
-
-
+                    for particle_index in range(len(self.position['x'])):
+                        for position in positions_traversed:
+                            if (self.position['x'][particle_index] == position[0]) and (self.position['y'][particle_index] == position[1]):
+                                # A collision has happened
+                                print('oh shit')
 
     def terminate(self):
         print(self.name+' Exiting')

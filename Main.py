@@ -1,5 +1,5 @@
 # Create particles in shared memory
-number_of_particles = 1
+number_of_particles = 2
 width = 1000
 height = 1000
 from multiprocessing import RawArray
@@ -17,6 +17,12 @@ for particle in range(len(acceleration['y'])):
     acceleration['y'][particle] = 98.1
 for particle in range(len(acceleration['x'])):
     acceleration['x'][particle] = 0
+# Randomise velocity
+from random import randint as random_integer
+for particle in range(len(velocity['x'])):
+    velocity['x'][particle] = random_integer(-100000,100000)/100
+for particle in range(len(velocity['y'])):
+    velocity['y'][particle] = random_integer(-100000,100000)/100
 
 # Initialise physics threads
 frame_queue = {}
