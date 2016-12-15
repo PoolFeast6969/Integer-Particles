@@ -1,37 +1,29 @@
 # Create particles in shared memory
-number_of_particles = 2
+number_of_particles = 1000
 width = 1000
 height = 1000
-from multiprocessing import RawArray
-position = {'x':RawArray('i', number_of_particles),'y':RawArray('i', number_of_particles)}
-velocity = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
-time_of_update = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
-acceleration = {'x':RawArray('d', number_of_particles),'y':RawArray('d', number_of_particles)}
-# Set position
-for particle in range(len(position['y'])):
-    position['y'][particle] = 500
-for particle in range(len(acceleration['x'])):
-    position['x'][particle] = 500
-# Set acceleration
-for particle in range(len(acceleration['y'])):
-    acceleration['y'][particle] = 98.1
-for particle in range(len(acceleration['x'])):
-    acceleration['x'][particle] = 0
-# Randomise velocity
+from multiprocessing import RawValue, Lock
 from random import randint as random_integer
-for particle in range(len(velocity['x'])):
-    velocity['x'][particle] = random_integer(-100000,100000)/100
-for particle in range(len(velocity['y'])):
-    velocity['y'][particle] = random_integer(-100000,100000)/100
+particles = [None]*number_of_particles
+for particle_number in range(number_of_particles):
+    velocity = {'x':RawValue('f',random_integer(-100000,100000)/100),'y':RawValue('f',random_integer(-100000,100000)/100)}
+    position = {'x':RawValue('i',random_integer(0,height-1)),'y':RawValue('i',random_integer(0,width-1))}
+
+    acceleration = {'x':RawValue('f', 0),'y':RawValue('f',98.1)}
+    time_of_update = {'x':RawValue('f'),'y':RawValue('f')}
+
+    lock = Lock()
+
+    particles[particle_number] = {'velocity':velocity, 'position':position, 'acceleration':acceleration, 'time_of_update':time_of_update, 'lock':lock}
 
 # Initialise physics threads
-frame_queue = {}
-phyics_process = {}
 from Physics import Physics_Thread
 from multiprocessing import Queue, cpu_count
+frame_queue = {}
+phyics_process = {}
 for cpu_core in range(cpu_count()):
     frame_queue[cpu_core] = Queue()
-    phyics_process[cpu_core] = Physics_Thread(frame_queue[cpu_core], position, velocity, time_of_update, acceleration)
+    phyics_process[cpu_core] = Physics_Thread(frame_queue[cpu_core], particles)
 
 # Initialise display
 import pygame
@@ -50,9 +42,9 @@ update_interval = 1/60
 running = True
 blank_array = empty((width,height))
 # Update the time since update to just before it starts
-for axis in time_of_update:
-    for particle in range(len(time_of_update[axis])):
-        time_of_update[axis][particle] = current_time()
+for particle in particles:
+    for axis in time_of_update:
+        particle['time_of_update'][axis] = current_time()
 previous_update = current_time()
 # Main loop
 while running:
@@ -69,7 +61,8 @@ while running:
     sleep(max(0, update_delay))
     # Add to pygame display array
     pixel_array = copy(blank_array)
-    pixel_array[position['x'], position['y']] = 99999999
+    for particle in particles:
+        pixel_array[particle['position']['x'], particle['position']['y']] = 99999999
     # Update display
     pygame.surfarray.blit_array(screen, pixel_array)
     pygame.display.flip()
