@@ -70,7 +70,7 @@ class Physics_Thread (Process):
                                 y += sy
                                 error += change_in_x
                             x += sx
-                            positions_traversed.append([x, y])
+                            positions_traversed.append({'x':x,'y':y})
                     else:
                         error = change_in_y / 2
                         while y != final_y:
@@ -79,13 +79,20 @@ class Physics_Thread (Process):
                                 x += sx
                                 error += change_in_y
                             y += sy
-                            positions_traversed.append([x, y])
+                            positions_traversed.append({'x':x,'y':y})
                     # Check those positions for stuff
                     for particle_index in range(len(self.position['x'])):
-                        for position in positions_traversed:
-                            if (self.position['x'][particle_index] == position[0]) and (self.position['y'][particle_index] == position[1]):
+                        for index, position_traversed in enumerate(positions_traversed):
+                            if (self.position['x'][particle_index] == position['x']) and (self.position['y'][particle_index] == position['y']):
                                 # A collision has happened
-                                print('oh shit')
+                                # Momentum is conserved
+                                for axis in self.position:
+                                    self.velocity[axis][particle_index] = -self.velocity[axis][particle_index]
+                                    self.velocity[axis][particle] = -self.velocity[axis][particle]
+                                # somehow change position to previous positions_traversed
+
+                                # somehow break three times
+
 
     def terminate(self):
         print(self.name+' Exiting')
