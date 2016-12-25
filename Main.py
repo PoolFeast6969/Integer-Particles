@@ -26,10 +26,10 @@ for particle in particles:
         axis[properties.index('velocity')] = random_integer(-100000,100000)/100
 
 # Initialise physics threads
-frame_queue = {}
-phyics_process = {}
 from Physics import Physics_Thread
 from multiprocessing import Queue, cpu_count
+frame_queue = {}
+phyics_process = {}
 for cpu_core in range(cpu_count()):
     frame_queue[cpu_core] = Queue()
     phyics_process[cpu_core] = Physics_Thread(frame_queue[cpu_core], particles, axes, properties)
