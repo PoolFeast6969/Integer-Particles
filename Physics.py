@@ -28,6 +28,7 @@ class Physics_Thread (Process):
                         inverse_velocity = 0
                     if (elapsed_time >= abs(inverse_velocity)):
                         # A position change is needed
+                        axis[self.properties.index('acceleration')] = (axis[self.properties.index('position')] - 500) * -2
                         # Calculate velocity
                         axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')] + axis[self.properties.index('acceleration')] * elapsed_time
                         # Calculate new position
@@ -41,7 +42,7 @@ class Physics_Thread (Process):
                             axis[self.properties.index('time of update')] = current_time()
                         # Edge bouncing
                         if not (0 <= new_position <= 999):
-                            axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')]/-1.1
+                            axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')]/-1.9
                             # Teleport back inside displayed range
                             if (new_position > 500):
                                 new_position = 999
