@@ -18,7 +18,8 @@ class Physics_Thread (Process):
         while not self.exit.is_set():
             particles_to_update = self.frame.get(timeout = 3)
             for particle_index in particles_to_update:
-                for axis in self.particles[particle_index]:
+                axis_to_update = []
+                for axis_index, axis in enumerate(self.particles[particle_index]):
                     # Calculate time since particle was last updated
                     elapsed_time = current_time() - axis[self.properties.index('time of update')]
                     # Determine if a position change is needed
@@ -27,8 +28,16 @@ class Physics_Thread (Process):
                     except ZeroDivisionError:
                         inverse_velocity = 0
                     if (elapsed_time >= abs(inverse_velocity)):
-                        # A position change is needed
+                        axis_to_update.append(axis_index)
+                # Calculate potential new position
+                if axis_to_update:
+                    for axis_index in axis_to_update:
+                        # Less spaghetti
+                        axis = self.particles[particle_index][axis_index]
+                        # Calculate acceleration toward center
                         axis[self.properties.index('acceleration')] = (axis[self.properties.index('position')] - 500) * -2
+                        # Get elapsed_time
+                        elapsed_time = current_time() - axis[self.properties.index('time of update')]
                         # Calculate velocity
                         axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')] + axis[self.properties.index('acceleration')] * elapsed_time
                         # Calculate new position
