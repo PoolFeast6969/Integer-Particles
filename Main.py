@@ -69,8 +69,6 @@ previous_update = current_time()
 
 # Main loop
 while running:
-    # Clear screen
-    screen.fill(pygame.Color('black'))
     # Listen for exit button
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -82,6 +80,8 @@ while running:
     update_delay = update_interval - (current_time() - previous_update)
     previous_update = current_time()
     sleep(max(0, update_delay))
+    # Clear screen
+    screen.fill(pygame.Color('black'))
     # Draw particles on screen
     for particle in particles:
         screen.set_at((int(particle[axes.index('x')][properties.index('position')]), int(particle[axes.index('y')][properties.index('position')])), pygame.Color('white'))
