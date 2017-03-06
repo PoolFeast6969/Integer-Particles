@@ -5,11 +5,12 @@ from time import sleep
 class Physics_Thread (Process):
     """ A group of particles that do things when stuff happens"""
 
-    def __init__(self, frame_queue, particles, axes, properties):
+    def __init__(self, frame_queue, particle_list, particle_map, axes, properties):
         Process.__init__(self)
         self.exit = Event()
         self.frame = frame_queue
-        self.particles = particles
+        self.particle_list = particle_list
+        self.particle_map = particle_map
         self.axes = axes
         self.properties = properties
         print(self.name+' Initialised')
@@ -19,7 +20,7 @@ class Physics_Thread (Process):
             particles_to_update = self.frame.get(timeout = 3)
             for particle_index in particles_to_update:
                 axis_to_update = []
-                for axis in self.particles[particle_index]:
+                for axis in self.particle_list[particle_index]:
                     # Calculate time since particle was last updated
                     elapsed_time = current_time() - axis[self.properties.index('time of update')]
                     # Determine if a position change is needed
@@ -33,11 +34,11 @@ class Physics_Thread (Process):
                         axis_to_update.append(False)
 
                 if any(axis_to_update):
-                    proposed_position = [None] * len(self.axes)
+                    new_position = [None] * len(self.axes)
                     # Calculate potential new position
                     for axis_index, update_required in enumerate(axis_to_update):
                         # Less spaghetti
-                        axis = self.particles[particle_index][axis_index]
+                        axis = self.particle_list[particle_index][axis_index]
                         if update_required:
                             # Calculate acceleration toward center
                             axis[self.properties.index('acceleration')] = (axis[self.properties.index('position')] - 500) * -2
@@ -46,7 +47,7 @@ class Physics_Thread (Process):
                             # Calculate velocity
                             axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')] + axis[self.properties.index('acceleration')] * elapsed_time
                             # Calculate new position
-                            new_position = axis[self.properties.index('position')] + int(elapsed_time * axis[self.properties.index('velocity')])
+                            proposed_position = axis[self.properties.index('position')] + int(elapsed_time * axis[self.properties.index('velocity')])
                             # Calculate position accuracy lost due to rounding
                             lost_position = elapsed_time * axis[self.properties.index('velocity')] - int(elapsed_time * axis[self.properties.index('velocity')])
                             # Reset the timer and adjust time for loss of position
@@ -55,26 +56,24 @@ class Physics_Thread (Process):
                             except ZeroDivisionError:
                                 axis[self.properties.index('time of update')] = current_time()
                             # Edge bouncing
-                            if not (0 <= new_position <= 999):
+                            if not (0 <= proposed_position <= 999):
                                 axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')]/-1.9
                                 # Teleport back inside displayed range
-                                if (new_position > 500):
-                                    new_position = 999
+                                if (proposed_position > 500):
+                                    proposed_position = 999
                                 else:
-                                    new_position = 0
+                                    proposed_position = 0
                             # Record new position
-                            proposed_position[axis_index] = new_position
+                            new_position[axis_index] = proposed_position
                         else:
                             # Keep same position
-                            proposed_position[axis_index] = axis[self.properties.index('position')]
-                        axis[self.properties.index('position')] = proposed_position[axis_index]
+                            new_position[axis_index] = axis[self.properties.index('position')]
 
-                    # Collision detection
                     # Determine positions crossed to reach new position
-                    final_x = proposed_position[self.axes.index('x')]
-                    final_y = proposed_position[self.axes.index('y')]
-                    initial_x = self.particles[particle_index][self.axes.index('x')][self.properties.index('position')]
-                    initial_y = self.particles[particle_index][self.axes.index('y')][self.properties.index('position')]
+                    final_x = new_position[self.axes.index('x')]
+                    final_y = new_position[self.axes.index('y')]
+                    initial_x = self.particle_list[particle_index][self.axes.index('x')][self.properties.index('position')]
+                    initial_y = self.particle_list[particle_index][self.axes.index('y')][self.properties.index('position')]
                     change_in_x = abs(final_x - initial_x)
                     change_in_y = abs(final_y - initial_y)
                     x, y = initial_x, initial_y
@@ -99,6 +98,25 @@ class Physics_Thread (Process):
                                 error += change_in_y
                             y += sy
                             positions_traversed.append({'x':x,'y':y})
+
+                    # Check for collisions
+                    for position_traversed in positions_traversed:
+                        collided_particle_index = self.particle_map[int(position_traversed['x'])][int(position_traversed['y'])]
+                        if collided_particle_index != 0:
+                            for axis in self.particle_list[collided_particle_index]:
+                                axis[self.properties.index('velocity')] = -axis[self.properties.index('velocity')]
+                                print('oh shit')
+
+
+
+                    # Update map
+                    self.particle_map[int(self.particle_list[particle_index][self.axes.index('x')][self.properties.index('position')])][int(self.particle_list[particle_index][self.axes.index('y')][self.properties.index('position')])] = 0
+                    self.particle_map[new_position[self.axes.index('x')]][new_position[self.axes.index('y')]] = particle_index
+                    # Update list
+                    for axis_index, update_required in enumerate(axis_to_update):
+                        self.particle_list[particle_index][axis_index][self.properties.index('position')] = new_position[axis_index]
+
+
 
     def terminate(self):
         print(self.name+' Exiting')
