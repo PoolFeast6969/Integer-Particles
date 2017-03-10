@@ -6,4 +6,4 @@ Requires python 3 because I needlessly used the new print syntax.
 
 The actual physics seems to be pretty inaccurate, but it looks nice so it might end up being some kinda game.
 
-10/10 would recommend making cpu bound games in python
+10/10 would recommend making cpu bound stuff in python

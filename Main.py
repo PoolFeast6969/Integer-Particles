@@ -22,7 +22,7 @@ print('Setting initial values')
 from random import randint as random_integer
 for particle in particle_list:
     # Set acceleration
-    #particle[axes.index('y')][properties.index('acceleration')] = 98.1
+    particle[axes.index('y')][properties.index('acceleration')] = 98.1
     for axis in particle:
         # Randomise position
         axis[properties.index('position')] = random_integer(0,999)
