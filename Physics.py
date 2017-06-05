@@ -58,7 +58,7 @@ class Physics_Thread (Process):
                                 axis[self.properties.index('time of update')] = current_time()
                             # Edge bouncing
                             if not (0 <= proposed_position <= self.width -1):
-                                axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')]
+                                axis[self.properties.index('velocity')] = -axis[self.properties.index('velocity')]
                                 # Teleport back inside displayed range
                                 if (proposed_position > self.width/2):
                                     proposed_position = self.width -1
@@ -106,9 +106,7 @@ class Physics_Thread (Process):
                         if collided_particle_index != 0:
                             for axis in self.particle_list[collided_particle_index]:
                                 axis[self.properties.index('velocity')] = -axis[self.properties.index('velocity')]
-                                print('oh shit')
-
-
+                                #print('oh shit')
 
                     # Update map
                     self.particle_map[int(self.particle_list[particle_index][self.axes.index('x')][self.properties.index('position')])][int(self.particle_list[particle_index][self.axes.index('y')][self.properties.index('position')])] = 0
@@ -117,7 +115,6 @@ class Physics_Thread (Process):
                     for axis_index, update_required in enumerate(axis_to_update):
                         self.particle_list[particle_index][axis_index][self.properties.index('position')] = new_position[axis_index]
             particles_to_update = self.frame.get()
-
 
     def terminate(self):
         print(self.name+' Exiting')

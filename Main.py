@@ -1,13 +1,15 @@
 if __name__ == "__main__":
     print('Started')
 
-    number_of_particles = 100
+    number_of_particles = 1000
     properties = ['position','velocity','time of update','acceleration']
     number_of_properties = len(properties)
     axes = ['x','y']
     number_of_axes = len(axes)
     width = 100
     height = 100
+
+    scaling = 5
 
     print('Creating shared memory')
 
@@ -58,7 +60,7 @@ if __name__ == "__main__":
     import pygame
     from pygame.locals import *
     pygame.init()
-    screen = pygame.display.set_mode((width, height),HWSURFACE|DOUBLEBUF|RESIZABLE)
+    screen = pygame.display.set_mode((width * scaling, height * scaling),HWSURFACE|DOUBLEBUF)
 
     input('Loaded, press enter to continue')
 
@@ -96,6 +98,7 @@ if __name__ == "__main__":
         # Draw particles on screen
         for particle in particle_list:
             screen.set_at((int(particle[axes.index('x')][properties.index('position')]), int(particle[axes.index('y')][properties.index('position')])), pygame.Color('white'))
+        screen.blit(pygame.transform.scale(screen,(width * scaling**2, height * scaling**2)), (0,0))
         pygame.display.flip()
 
     # End physics threads
