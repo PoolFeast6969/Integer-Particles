@@ -1,5 +1,5 @@
 from timeit import default_timer as current_time
-from multiprocessing import Process, Event
+from multiprocessing import Process
 from time import sleep
 
 class Physics_Thread (Process):
@@ -7,17 +7,18 @@ class Physics_Thread (Process):
 
     def __init__(self, frame_queue, particle_list, particle_map, axes, properties):
         Process.__init__(self)
-        self.exit = Event()
         self.frame = frame_queue
         self.particle_list = particle_list
         self.particle_map = particle_map
         self.axes = axes
         self.properties = properties
+        self.width = particle_map.shape[1]
+        self.height = particle_map.shape[0]
         print(self.name+' Initialised')
 
     def run(self):
-        while not self.exit.is_set():
-            particles_to_update = self.frame.get(timeout = 3)
+        particles_to_update = self.frame.get()
+        while particles_to_update is not None:
             for particle_index in particles_to_update:
                 axis_to_update = []
                 for axis in self.particle_list[particle_index]:
@@ -41,7 +42,7 @@ class Physics_Thread (Process):
                         axis = self.particle_list[particle_index][axis_index]
                         if update_required:
                             # Calculate acceleration toward center
-                            # axis[self.properties.index('acceleration')] = (axis[self.properties.index('position')] - 500) * -2
+                            #axis[self.properties.index('acceleration')] = (axis[self.properties.index('position')] - 50) * -2
                             # Get elapsed_time
                             elapsed_time = current_time() - axis[self.properties.index('time of update')]
                             # Calculate velocity
@@ -56,11 +57,11 @@ class Physics_Thread (Process):
                             except ZeroDivisionError:
                                 axis[self.properties.index('time of update')] = current_time()
                             # Edge bouncing
-                            if not (0 <= proposed_position <= 999):
-                                axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')]/-1.9
+                            if not (0 <= proposed_position <= self.width -1):
+                                axis[self.properties.index('velocity')] = axis[self.properties.index('velocity')]
                                 # Teleport back inside displayed range
-                                if (proposed_position > 500):
-                                    proposed_position = 999
+                                if (proposed_position > self.width/2):
+                                    proposed_position = self.width -1
                                 else:
                                     proposed_position = 0
                             # Record new position
@@ -115,9 +116,9 @@ class Physics_Thread (Process):
                     # Update list
                     for axis_index, update_required in enumerate(axis_to_update):
                         self.particle_list[particle_index][axis_index][self.properties.index('position')] = new_position[axis_index]
-
+            particles_to_update = self.frame.get()
 
 
     def terminate(self):
         print(self.name+' Exiting')
-        self.exit.set()
+        self.frame.put(None)

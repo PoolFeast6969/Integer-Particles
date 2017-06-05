@@ -5,8 +5,8 @@ properties = ['position','velocity','time of update','acceleration']
 number_of_properties = len(properties)
 axes = ['x','y']
 number_of_axes = len(axes)
-width = 1000
-height = 1000
+width = 100
+height = 100
 
 print('Creating shared memory')
 
@@ -25,9 +25,9 @@ for particle in particle_list:
     particle[axes.index('y')][properties.index('acceleration')] = 98.1
     for axis in particle:
         # Randomise position
-        axis[properties.index('position')] = random_integer(0,999)
+        axis[properties.index('position')] = random_integer(0,min(width,height) - 1)
         # Randomise velocity
-        axis[properties.index('velocity')] = random_integer(-1000000,1000000)/1000
+        axis[properties.index('velocity')] = random_integer(-1000000,1000000)/10000
 
 print('Creating particle map')
 
@@ -55,8 +55,9 @@ print('Starting display')
 
 # Initialise display
 import pygame
+from pygame.locals import *
 pygame.init()
-screen = pygame.display.set_mode((width, height))
+screen = pygame.display.set_mode((width, height),HWSURFACE|DOUBLEBUF|RESIZABLE)
 
 input('Loaded, press enter to continue')
 
@@ -64,7 +65,7 @@ input('Loaded, press enter to continue')
 for process in phyics_process.values():
     process.start()
 
-# Start the physics loops
+# Setup main loop
 from numpy import empty, copy
 from timeit import default_timer as current_time
 from time import sleep
@@ -88,8 +89,8 @@ while running:
         frame_queue[cpu_core].put(list(range(round(number_of_particles/physics_cpus*(cpu_core)), round(number_of_particles/physics_cpus*(cpu_core+1)))))
     # Sleep to maintain update rate
     update_delay = update_interval - (current_time() - previous_update)
-    previous_update = current_time()
     sleep(max(0, update_delay))
+    previous_update = current_time()
     # Clear screen
     screen.fill(pygame.Color('black'))
     # Draw particles on screen
