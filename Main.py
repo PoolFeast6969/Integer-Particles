@@ -1,15 +1,16 @@
 if __name__ == "__main__":
     print('Started')
 
-    number_of_particles = 1000
+    number_of_particles = 10000
     properties = ['position','velocity','time of update','acceleration']
-    number_of_properties = len(properties)
     axes = ['x','y']
-    number_of_axes = len(axes)
-    width = 100
-    height = 100
-
+    axes_size = [200,50]
     scaling = 5
+
+    number_of_properties = len(properties)
+    number_of_axes = len(axes)
+    width = axes_size[axes.index('x')]
+    height = axes_size[axes.index('y')]
 
     print('Creating shared memory')
 
@@ -25,18 +26,18 @@ if __name__ == "__main__":
     from random import randint as random_integer
     for particle in particle_list:
         # Set acceleration
-        particle[axes.index('y')][properties.index('acceleration')] = 98.1
-        for axis in particle:
+        particle[axes.index('y')][properties.index('acceleration')] = 100
+        for axis_index, axis in enumerate(axes):
             # Randomise position
-            axis[properties.index('position')] = random_integer(0,min(width,height) - 1)
+            particle[axis_index][properties.index('position')] = random_integer(0,axes_size[axis_index] - 1)
             # Randomise velocity
-            axis[properties.index('velocity')] = random_integer(-1000000,1000000)/10000
+            particle[axis_index][properties.index('velocity')] = random_integer(-1000000,1000000)/10000
 
     print('Creating particle map')
 
     # Create particle map
-    particle_map_flat = RawArray('I', height * width)
-    particle_map = frombuffer(particle_map_flat, dtype='I').reshape((height, width))
+    particle_map_flat = RawArray('I', width * height)
+    particle_map = frombuffer(particle_map_flat, dtype='I').reshape((width,height))
     for particle_index, particle in enumerate(particle_list):
         x_position = int(particle[axes.index('x')][properties.index('position')])
         y_position = int(particle[axes.index('y')][properties.index('position')])
@@ -48,8 +49,8 @@ if __name__ == "__main__":
     from Physics import Physics_Thread
     from multiprocessing import Queue, cpu_count
     physics_cpus = cpu_count() - 1 # -1 for main thread
-    frame_queue = {}
-    phyics_process = {}
+    frame_queue = [None] * physics_cpus
+    phyics_process = [None] * physics_cpus
     for cpu_core in range(physics_cpus):
         frame_queue[cpu_core] = Queue()
         phyics_process[cpu_core] = Physics_Thread(frame_queue[cpu_core], particle_list, particle_map, axes, properties)
@@ -65,7 +66,7 @@ if __name__ == "__main__":
     input('Loaded, press enter to continue')
 
     # Start physics threads
-    for process in phyics_process.values():
+    for process in phyics_process:
         process.start()
 
     # Setup main loop
