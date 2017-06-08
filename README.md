@@ -2,7 +2,7 @@
 
 Something to do with simulated particles that have their positions as integers to make collision detection easy
 
-![Demo](https://github.com/ajasmin/PoolFeast6969/Integer-Particles/raw/master/demo.gif)
+![Demo](https://raw.githubusercontent.com/PoolFeast6969/Integer-Particles/master/demo.gif)
 
 Requires python 3 because I needlessly used the new print syntax.
 
