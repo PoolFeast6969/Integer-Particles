@@ -1,21 +1,25 @@
 from timeit import default_timer as current_time
 from multiprocessing import Process
 from time import sleep
+from os import getpid
+from setproctitle import setproctitle
 
 class Physics_Thread (Process):
-    """ A group of particles that do things when stuff happens"""
+    """ A process of particles that do things when stuff happens"""
 
     def __init__(self, frame_queue, particle_list, particle_map, axes, properties):
         Process.__init__(self)
+        self.daemon = True
         self.frame = frame_queue
         self.particle_list = particle_list
         self.particle_map = particle_map
         self.axes = axes
         self.properties = properties
         self.size = [particle_map.shape[0], particle_map.shape[1]]
-        print(self.name+' Initialised')
+        print(self.name+' ready')
 
     def run(self):
+        setproctitle(self.name)
         particles_to_update = self.frame.get()
         while particles_to_update is not None:
             for particle_index in particles_to_update:

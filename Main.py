@@ -1,16 +1,21 @@
 if __name__ == "__main__":
     print('Started')
 
-    number_of_particles = 10000
+    number_of_particles = 1000
     properties = ['position','velocity','time of update','acceleration']
     axes = ['x','y']
-    axes_size = [200,50]
-    scaling = 5
+    axes_size = [50,50]
+
+    scaling = 15
+    particle_color = 10000000
 
     number_of_properties = len(properties)
     number_of_axes = len(axes)
     width = axes_size[axes.index('x')]
     height = axes_size[axes.index('y')]
+
+    from setproctitle import setproctitle
+    setproctitle('particle thingo')
 
     print('Creating shared memory')
 
@@ -62,6 +67,7 @@ if __name__ == "__main__":
     from pygame.locals import *
     pygame.init()
     screen = pygame.display.set_mode((width * scaling, height * scaling),HWSURFACE|DOUBLEBUF)
+    particle_surf = pygame.Surface((width, height))
 
     input('Loaded, press enter to continue')
 
@@ -72,6 +78,7 @@ if __name__ == "__main__":
     # Setup main loop
     from timeit import default_timer as current_time
     from time import sleep
+    from numpy import where
     update_interval = 1/60
     running = True
 
@@ -94,14 +101,13 @@ if __name__ == "__main__":
         update_delay = update_interval - (current_time() - previous_update)
         sleep(max(0, update_delay))
         previous_update = current_time()
-        # Clear screen
-        screen.fill(pygame.Color('black'))
-        # Draw particles on screen
-        for particle in particle_list:
-            screen.set_at((int(particle[axes.index('x')][properties.index('position')]), int(particle[axes.index('y')][properties.index('position')])), pygame.Color('white'))
-        screen.blit(pygame.transform.scale(screen,(width * scaling**2, height * scaling**2)), (0,0))
+        # Draw particles on surface
+        pygame.surfarray.blit_array(particle_surf, where(particle_map > 0, particle_color, particle_map))
+        # Scale surface to fill window
+        screen.blit(pygame.transform.scale(particle_surf,(width * scaling, height * scaling)), (0,0))
+        # Update display
         pygame.display.flip()
 
     # End physics threads
-    for process in phyics_process.values():
+    for process in phyics_process:
         process.terminate()
