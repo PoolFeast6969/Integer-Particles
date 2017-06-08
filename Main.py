@@ -7,7 +7,7 @@ if __name__ == "__main__":
     axes_size = [50,50]
 
     scaling = 15
-    particle_color = 10000000
+    particle_color = 10000000 # I have no idea how this works, but this is brown apparently
 
     number_of_properties = len(properties)
     number_of_axes = len(axes)
