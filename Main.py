@@ -69,11 +69,9 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode((width * scaling, height * scaling),HWSURFACE|DOUBLEBUF)
     particle_surf = pygame.Surface((width, height))
 
-    input('Loaded, press enter to continue')
-
     # Start physics threads
     for process in phyics_process:
-        process.start()
+    process.start()
 
     # Setup main loop
     from timeit import default_timer as current_time
@@ -81,6 +79,8 @@ if __name__ == "__main__":
     from numpy import where
     update_interval = 1/60
     running = True
+    
+    input('Loaded, press enter to continue')
 
     # Update the time since update to just before it starts
     for particle in particle_list:
