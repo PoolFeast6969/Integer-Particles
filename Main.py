@@ -1,4 +1,3 @@
-
 print('Started')
 
 number_of_particles = 10
