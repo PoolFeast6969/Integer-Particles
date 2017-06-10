@@ -92,7 +92,7 @@ class Physics_Thread (Process):
                                 y += sy
                                 error += change_in_x
                             x += sx
-                            positions_traversed.append({'x':x,'y':y})
+                            positions_traversed.append([x,y])
                     else:
                         error = change_in_y / 2
                         while y != final_y:
@@ -101,15 +101,19 @@ class Physics_Thread (Process):
                                 x += sx
                                 error += change_in_y
                             y += sy
-                            positions_traversed.append({'x':x,'y':y})
+                            positions_traversed.append([x,y])
 
                     # Check for collisions
-                    for position_traversed in positions_traversed:
-                        collided_particle_index = self.particle_map[int(position_traversed['x'])][int(position_traversed['y'])]
+                    for position_traversed_index, position_traversed in enumerate(positions_traversed):
+                        collided_particle_index = self.particle_map[int(position_traversed[self.axes.index('x')])][int(position_traversed[self.axes.index('y')])]
                         if collided_particle_index != 0:
-                            for axis in self.particle_list[collided_particle_index - 1]:
-                                axis[self.properties.index('velocity')] = -axis[self.properties.index('velocity')]
+                            for axis_index ,axis in enumerate(self.particle_list[collided_particle_index - 1]):
+                                axis[self.properties.index('velocity')],self.particle_list[particle_index][axis_index][self.properties.index('velocity')] = self.particle_list[particle_index][axis_index][self.properties.index('velocity')]/1.2,axis[self.properties.index('velocity')]/1.2
+                                new_position[axis_index] = positions_traversed[position_traversed_index][axis_index]
                                 #print('oh shit')
+                                #http://vobarian.com/collisions/2dcollisions2.pdf
+                            break
+
 
                     # Update map
                     self.particle_map[int(self.particle_list[particle_index][self.axes.index('x')][self.properties.index('position')])][int(self.particle_list[particle_index][self.axes.index('y')][self.properties.index('position')])] = 0
