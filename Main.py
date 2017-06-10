@@ -5,8 +5,8 @@ properties = ['position','velocity','time of update','acceleration']
 axes = ['x','y']
 axes_size = [50,50]
 
-scaling = 15
-particle_color = 10000000 # I have no idea how this works, but this is brown apparently
+window_scaling = 10
+particle_color = 0xFFFFFF
 
 number_of_properties = len(properties)
 number_of_axes = len(axes)
@@ -45,7 +45,7 @@ particle_map = frombuffer(particle_map_flat, dtype='I').reshape((width,height))
 for particle_index, particle in enumerate(particle_list):
     x_position = int(particle[axes.index('x')][properties.index('position')])
     y_position = int(particle[axes.index('y')][properties.index('position')])
-    particle_map[x_position][y_position] = particle_index
+    particle_map[x_position][y_position] = particle_index + 1
 
 print('Initialising physics threads')
 
@@ -66,7 +66,7 @@ print('Starting display')
 import pygame
 from pygame.locals import *
 pygame.init()
-screen = pygame.display.set_mode((width * scaling, height * scaling),HWSURFACE|DOUBLEBUF)
+screen = pygame.display.set_mode((width * window_scaling, height * window_scaling),HWSURFACE|DOUBLEBUF)
 particle_surf = pygame.Surface((width, height))
 
 print('Setting up main loop')
@@ -107,7 +107,7 @@ while running:
     # Draw particles on surface
     pygame.surfarray.blit_array(particle_surf, where(particle_map > 0, particle_color, particle_map))
     # Scale surface to fill window
-    screen.blit(pygame.transform.scale(particle_surf,(width * scaling, height * scaling)), (0,0))
+    screen.blit(pygame.transform.scale(particle_surf,(width * window_scaling, height * window_scaling)), (0,0))
     # Update display
     pygame.display.flip()
 
