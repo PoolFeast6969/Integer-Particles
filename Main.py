@@ -4,8 +4,9 @@ number_of_particles = 100
 properties = ['position','velocity','time of update','acceleration']
 axes = ['x','y']
 axes_size = [50,50]
+vortex = True
 
-window_scaling = 10
+window_scaling = 20
 particle_color = 0xFFFFFF
 
 number_of_properties = len(properties)
@@ -29,13 +30,22 @@ print('Setting initial values')
 # Set initial property values
 from random import randint as random_integer
 for particle in particle_list:
-    # Set acceleration
-    particle[axes.index('y')][properties.index('acceleration')] = 100
-    for axis_index, axis in enumerate(axes):
-        # Randomise position
-        particle[axis_index][properties.index('position')] = random_integer(0,axes_size[axis_index] - 1)
-        # Randomise velocity
-        particle[axis_index][properties.index('velocity')] = random_integer(-1000000,1000000)/10000
+    if vortex:
+        poop = random_integer(0,height - 1)
+        for axis_index, axis in enumerate(axes):
+            # Randomise position
+            particle[axis_index][properties.index('position')] = poop
+
+        particle[axes.index('y')][properties.index('velocity')] = -2 * (particle[axes.index('y')][properties.index('position')] - width/2)
+        particle[axes.index('x')][properties.index('velocity')] = 2* (particle[axes.index('x')][properties.index('position')] - height/2)
+    else:
+        # Set acceleration
+        particle[axes.index('y')][properties.index('acceleration')] = 100
+        for axis_index, axis in enumerate(axes):
+            # Randomise position
+            particle[axis_index][properties.index('position')] = random_integer(0,axes_size[axis_index] - 1)
+            # Randomise velocity
+            particle[axis_index][properties.index('velocity')] = random_integer(-1000000,1000000)/10000
 
 print('Creating particle map')
 
