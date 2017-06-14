@@ -1,8 +1,7 @@
 from timeit import default_timer as current_time
 from multiprocessing import Process
-from time import sleep
-from os import getpid
 from setproctitle import setproctitle
+from numpy import sign
 
 class Physics_Thread (Process):
     """ A process of particles that do things when stuff happens"""
@@ -15,7 +14,7 @@ class Physics_Thread (Process):
         self.particle_map = particle_map
         self.axes = axes
         self.indexs = indexs
-        self.size = [particle_map.shape[0], particle_map.shape[1]]
+        self.size = [particle_map.shape[0] -1, particle_map.shape[1] -1]
 
     def run(self):
         setproctitle(self.name)
@@ -65,74 +64,33 @@ class Physics_Thread (Process):
                                 particle_axis[i['time of update']] = current_time()
 
                     # Determine positions crossed to reach new position
-                    final_x = int(move_distance[i['x']])
-                    final_y = int(move_distance[i['y']])
-                    initial_x = 0
-                    initial_y = 0
-                    change_in_x = abs(int(move_distance[i['x']]))
-                    change_in_y = abs(int(move_distance[i['y']]))
-                    x, y = initial_x, initial_y
-                    sx = -1 if initial_x > final_x else 1
-                    sy = -1 if initial_y > final_y else 1
-                    positions_traversed = []
-                    if change_in_x > change_in_y:
-                        error = change_in_x / 2
-                        while x != final_x:
-                            previous_x = x
-                            previous_y = y
-                            error -= change_in_y
-                            if error < 0:
-                                y += sy
-                                error += change_in_x
-                            x += sx
-                            # Edge bouncing
-                            prev = [previous_x,previous_y]
-                            nxt = [x,y]
-                            if not(0 <= x + self.particle_list[particle_index][i['x']][i['position']] <= self.size[i['x']] - 1)  or not(1 <= y + self.particle_list[particle_index][i['y']][i['position']] <= self.size[i['y']] - 1):
-                                for axis_index, particle_axis in enumerate(self.particle_list[particle_index]):
-                                    particle_axis[i['velocity']] = -particle_axis[i['velocity']]/1.1
-                                    # Teleport back inside displayed range
-                                    move_distance[axis_index] = prev[axis_index]
-                                break
-                            # Check for collisions
-                            collided_particle_index = self.particle_map[int(x + self.particle_list[particle_index][i['x']][i['position']])][int(y + self.particle_list[particle_index][i['y']][i['position']])]
-                            if (collided_particle_index != 0) and (collided_particle_index != particle_index + 1):
-                                for axis_index, particle_axis in enumerate(self.particle_list[collided_particle_index - 1]):
-                                    particle_axis[i['velocity']],self.particle_list[particle_index][axis_index][i['velocity']] = self.particle_list[particle_index][axis_index][i['velocity']]/1.1, particle_axis[i['velocity']]/1.1
-                                    move_distance[axis_index] = [previous_x, previous_y][axis_index]
-                                    #print('oh shit')
-                                    #http://vobarian.com/collisions/2dcollisions2.pdf
-                                break
-                    else:
-                        error = change_in_y / 2
-                        while y != final_y:
-                            previous_x = x
-                            previous_y = y
-                            error -= change_in_x
-                            if error < 0:
-                                x += sx
-                                error += change_in_y
-                            y += sy
-                            # Edge bouncing
-                            prev = [previous_x,previous_y]
-                            nxt = [x,y]
-                            if not(0 <= x + self.particle_list[particle_index][i['x']][i['position']] <= self.size[i['x']] - 1)  or not(1 <= y + self.particle_list[particle_index][i['y']][i['position']] <= self.size[i['y']] - 1):
-                                for axis_index, particle_axis in enumerate(self.particle_list[particle_index]):
-                                    particle_axis[i['velocity']] = -particle_axis[i['velocity']]/1.1
-                                    # Teleport back inside displayed range
-                                    move_distance[axis_index] = prev[axis_index]
-                                break
-                            # Check for collisions with particles
-                            collided_particle_index = self.particle_map[int(x + self.particle_list[particle_index][i['x']][i['position']])][int(y + self.particle_list[particle_index][i['y']][i['position']])]
-                            if (collided_particle_index != 0) and (collided_particle_index != particle_index + 1):
-                                for axis_index, particle_axis in enumerate(self.particle_list[collided_particle_index - 1]):
-                                    particle_axis[i['velocity']],self.particle_list[particle_index][axis_index][i['velocity']] = self.particle_list[particle_index][axis_index][i['velocity']]/1.1, particle_axis[i['velocity']]/1.1
-                                    move_distance[axis_index] = [previous_x, previous_y][axis_index]
-                                    #print('oh shit ma boi')
-                                    #http://vobarian.com/collisions/2dcollisions2.pdf
-                                break
+                    # https://www.cs.helsinki.fi/group/goa/mallinnus/lines/bresenh.html
+                    final = {'x':int(move_distance[i['x']]),'y':int(move_distance[i['y']])}
+                    coord = {'x':0,'y':0}
+                    try:
+                        bleh = final['y']/final['x']
+                    except ZeroDivisionError:
+                        bleh = 0
+                    try:
+                        blarg = final['x']/final['y']
+                    except ZeroDivisionError:
+                        blarg = 0
+                    slope = {'x':bleh,'y':blarg}
+                    lmao = 'x' if abs(final['y']) < abs(final['x']) else 'y'
+                    point = [0,0]
+                    while coord[lmao] != final[lmao]:
+                        coord[lmao] += sign(final[lmao])
+                        previous_point = point
+                        point = [coord[lmao],int(slope[lmao] * coord[lmao])] if abs(final['y']) < abs(final['x']) else [int(slope[lmao] * coord[lmao]),coord[lmao]]
+                        for axis_index,point_axis in enumerate(point):
+                            if not(0 <= point_axis + self.particle_list[particle_index][axis_index][i['position']] <= self.size[axis_index]):
+                                self.particle_list[particle_index][axis_index][i['velocity']] = -self.particle_list[particle_index][axis_index][i['velocity']]/1.1
+                                # Teleport back inside displayed range
+                                if not(0 <= previous_point[axis_index] + self.particle_list[particle_index][axis_index][i['position']] <= self.size[axis_index]):
+                                    print('ohhhhhhh shit')
+                                move_distance[axis_index] = previous_point[axis_index]
+                                final[lmao] = coord[lmao]
 
-                    # Update arrays with the new position
                     # Update map
                     self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']])][int(self.particle_list[particle_index][i['y']][i['position']])] = 0
                     self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + int(move_distance[i['x']]))][int(self.particle_list[particle_index][i['y']][i['position']] + int(move_distance[i['y']]))] = particle_index + 1

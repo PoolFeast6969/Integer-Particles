@@ -1,10 +1,10 @@
 print('Started')
 
-number_of_particles = 1000
+number_of_particles = 100
 properties = ['position','velocity','time of update','acceleration']
 axes = ['x','y']
 axes_size = [50,50]
-vortex = False
+placement = 'normal'
 indexs = {**{k: v for v, k in enumerate(properties)},**{k: v for v, k in enumerate(axes)}}
 
 window_scaling = 10
@@ -30,8 +30,9 @@ print('Setting initial values')
 
 # Set initial property values
 from random import randint as random_integer
-for particle in particle_list:
-    if vortex:
+
+if placement is 'vortex':
+    for particle in particle_list:
         poop = random_integer(0,height - 1)
         for axis_index, axis in enumerate(axes):
             # Randomise position
@@ -39,7 +40,18 @@ for particle in particle_list:
 
         particle[indexs['y']][indexs['velocity']] = -2 * (particle[indexs['y']][indexs['position']] - width/2)
         particle[indexs['x']][indexs['velocity']] = 2* (particle[indexs['x']][indexs['position']] - height/2)
-    else:
+elif placement is 'slope':
+    from numpy import sign
+    final = {'x':-40,'y':30}
+    coord = {'x':0,'y':0}
+    slope = {'x':final['y']/final['x'],'y':final['x']/final['y']}
+
+    lmao = 'x' if abs(final['y']) < abs(final['x']) else 'y'
+    while coord[lmao] != final[lmao]:
+        coord[lmao] += sign(final[lmao])
+        print(coord[lmao],int(slope[lmao] * coord[lmao]))
+elif placement is 'normal':
+    for particle in particle_list:
         # Set acceleration
         particle[indexs['y']][indexs['acceleration']] = 100
         for axis_index, axis in enumerate(axes):
