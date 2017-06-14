@@ -7,7 +7,7 @@ axes_size = [50,50]
 vortex = False
 indexs = {**{k: v for v, k in enumerate(properties)},**{k: v for v, k in enumerate(axes)}}
 
-window_scaling = 20
+window_scaling = 10
 particle_color = 0xFFFFFF
 
 number_of_properties = len(properties)
