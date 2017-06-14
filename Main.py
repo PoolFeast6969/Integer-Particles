@@ -40,16 +40,6 @@ if placement is 'vortex':
 
         particle[indexs['y']][indexs['velocity']] = -2 * (particle[indexs['y']][indexs['position']] - width/2)
         particle[indexs['x']][indexs['velocity']] = 2* (particle[indexs['x']][indexs['position']] - height/2)
-elif placement is 'slope':
-    from numpy import sign
-    final = {'x':-40,'y':30}
-    coord = {'x':0,'y':0}
-    slope = {'x':final['y']/final['x'],'y':final['x']/final['y']}
-
-    lmao = 'x' if abs(final['y']) < abs(final['x']) else 'y'
-    while coord[lmao] != final[lmao]:
-        coord[lmao] += sign(final[lmao])
-        print(coord[lmao],int(slope[lmao] * coord[lmao]))
 elif placement is 'normal':
     for particle in particle_list:
         # Set acceleration
