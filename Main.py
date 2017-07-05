@@ -1,6 +1,6 @@
 print('Started')
 
-number_of_particles = 1000
+number_of_particles = 1
 properties = ['position','velocity','time of update','acceleration']
 axes = ['x','y']
 axes_size = [50,50]

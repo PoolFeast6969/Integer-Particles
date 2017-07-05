@@ -4,7 +4,7 @@ from setproctitle import setproctitle
 from numpy import sign
 
 class Physics_Thread (Process):
-    """ A process of particles that do things when stuff happens"""
+    """A process of particles that do things when stuff happens"""
 
     def __init__(self, frame_queue, particle_list, particle_map, axes, indexs):
         Process.__init__(self)
@@ -78,18 +78,28 @@ class Physics_Thread (Process):
                     slope = {'x':bleh,'y':blarg}
                     lmao = 'x' if abs(final['y']) < abs(final['x']) else 'y'
                     point = [0,0]
+                    #Check each coordinate for an obstruction
                     while coord[lmao] != final[lmao]:
                         coord[lmao] += sign(final[lmao])
                         previous_point = point
                         point = [coord[lmao],int(slope[lmao] * coord[lmao])] if abs(final['y']) < abs(final['x']) else [int(slope[lmao] * coord[lmao]),coord[lmao]]
+                        # Check for inteferance with walls
                         for axis_index,point_axis in enumerate(point):
-                            if not(0 <= point_axis + self.particle_list[particle_index][axis_index][i['position']] <= self.size[axis_index]):
+                            if not(0 <= self.particle_list[particle_index][axis_index][i['position']] + point_axis <= self.size[axis_index]):
+                                # Reverse direction
                                 self.particle_list[particle_index][axis_index][i['velocity']] = -self.particle_list[particle_index][axis_index][i['velocity']]
-                                # Teleport back inside displayed range
-                                if not(0 <= previous_point[axis_index] + self.particle_list[particle_index][axis_index][i['position']] <= self.size[axis_index]):
-                                    print('ohhhhhhh shit')
-                                move_distance[1],move_distance[0] = previous_point[1],previous_point[0]
+                                # Move back inside wall range
+                                point[axis_index] = previous_point[axis_index]
+                                # Stop checking coordinates
                                 final[lmao] = coord[lmao]
+                        # Check for collisions with particles
+                        hit_particle = self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + point[0]),int(self.particle_list[particle_index][i['y']][i['position']] + point[1])]
+                        if hit_particle != 0:
+                            self.particle_list[hit_particle - 1][axis_index][i['velocity']], self.particle_list[particle_index][axis_index][i['velocity']] = self.particle_list[particle_index][axis_index][i['velocity']]/1.1, self.particle_list[hit_particle - 1][axis_index][i['velocity']]/1.1
+                            point = previous_point
+                            #http://vobarian.com/collisions/2dcollisions2.pdf
+                            final[lmao] = coord[lmao]
+                    move_distance = point
 
                     # Update map
                     self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']])][int(self.particle_list[particle_index][i['y']][i['position']])] = 0
