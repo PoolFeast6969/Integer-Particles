@@ -84,11 +84,11 @@ class Physics_Thread (Process):
                         point = [coord[lmao],int(slope[lmao] * coord[lmao])] if abs(final['y']) < abs(final['x']) else [int(slope[lmao] * coord[lmao]),coord[lmao]]
                         for axis_index,point_axis in enumerate(point):
                             if not(0 <= point_axis + self.particle_list[particle_index][axis_index][i['position']] <= self.size[axis_index]):
-                                self.particle_list[particle_index][axis_index][i['velocity']] = -self.particle_list[particle_index][axis_index][i['velocity']]/1.1
+                                self.particle_list[particle_index][axis_index][i['velocity']] = -self.particle_list[particle_index][axis_index][i['velocity']]
                                 # Teleport back inside displayed range
                                 if not(0 <= previous_point[axis_index] + self.particle_list[particle_index][axis_index][i['position']] <= self.size[axis_index]):
                                     print('ohhhhhhh shit')
-                                move_distance[axis_index] = previous_point[axis_index]
+                                move_distance[1],move_distance[0] = previous_point[1],previous_point[0]
                                 final[lmao] = coord[lmao]
 
                     # Update map
