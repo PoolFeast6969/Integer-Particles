@@ -77,29 +77,34 @@ class Physics_Thread (Process):
                         blarg = 0
                     slope = {'x':bleh,'y':blarg}
                     lmao = 'x' if abs(final['y']) < abs(final['x']) else 'y'
-                    point = [0,0]
+                    move_distance = [0,0]
                     #Check each coordinate for an obstruction
                     while coord[lmao] != final[lmao]:
                         coord[lmao] += sign(final[lmao])
-                        previous_point = point
-                        point = [coord[lmao],int(slope[lmao] * coord[lmao])] if abs(final['y']) < abs(final['x']) else [int(slope[lmao] * coord[lmao]),coord[lmao]]
+                        previous_point = move_distance
+                        move_distance = [coord[lmao],int(slope[lmao] * coord[lmao])] if abs(final['y']) < abs(final['x']) else [int(slope[lmao] * coord[lmao]),coord[lmao]]
                         # Check for inteferance with walls
-                        for axis_index,point_axis in enumerate(point):
-                            if not(0 <= self.particle_list[particle_index][axis_index][i['position']] + point_axis <= self.size[axis_index]):
+                        for axis_index in range(len(move_distance)):
+                            if not(0 <= self.particle_list[particle_index][axis_index][i['position']] + move_distance[axis_index] <= self.size[axis_index]):
                                 # Reverse direction
                                 self.particle_list[particle_index][axis_index][i['velocity']] = -self.particle_list[particle_index][axis_index][i['velocity']]
                                 # Move back inside wall range
-                                point[axis_index] = previous_point[axis_index]
+                                move_distance[axis_index] = previous_point[axis_index]
                                 # Stop checking coordinates
                                 final[lmao] = coord[lmao]
                         # Check for collisions with particles
-                        hit_particle = self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + point[0]),int(self.particle_list[particle_index][i['y']][i['position']] + point[1])]
+                        hit_particle = self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + move_distance[0]), int(self.particle_list[particle_index][i['y']][i['position']] + move_distance[1])]
                         if hit_particle != 0:
-                            self.particle_list[hit_particle - 1][axis_index][i['velocity']], self.particle_list[particle_index][axis_index][i['velocity']] = self.particle_list[particle_index][axis_index][i['velocity']]/1.1, self.particle_list[hit_particle - 1][axis_index][i['velocity']]/1.1
-                            point = previous_point
-                            #http://vobarian.com/collisions/2dcollisions2.pdf
-                            final[lmao] = coord[lmao]
-                    move_distance = point
+                            # Swap velocities
+                            self.particle_list[hit_particle - 1][axis_index][i['velocity']], self.particle_list[particle_index][axis_index][i['velocity']] = self.particle_list[particle_index][axis_index][i['velocity']], self.particle_list[hit_particle - 1][axis_index][i['velocity']]
+                            # Move back one point
+                            move_distance = previous_point
+                            break
+                    # Adjust for lost time
+                    for axis_index, particle_axis in final.items():
+                        print((particle_axis - move_distance[i[axis_index]]) / self.particle_list[particle_index][i[axis_index]][i['velocity']])
+                        self.particle_list[particle_index][i[axis_index]][i['time of update']] = self.particle_list[particle_index][i[axis_index]][i['time of update']] - (particle_axis - move_distance[i[axis_index]]) / self.particle_list[particle_index][i[axis_index]][i['velocity']]
+
 
                     # Update map
                     self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']])][int(self.particle_list[particle_index][i['y']][i['position']])] = 0
