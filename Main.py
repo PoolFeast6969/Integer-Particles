@@ -3,17 +3,18 @@ print('Started')
 number_of_particles = 1
 properties = ['position','velocity','time of update','acceleration']
 axes = ['x','y']
-axes_size = [50,50]
+axes_size = [100,100]
 placement = 'normal'
-indexs = {**{k: v for v, k in enumerate(properties)},**{k: v for v, k in enumerate(axes)}}
 
-window_scaling = 10
+window_scaling = 8
 particle_color = 0xFFFFFF
+update_interval = 1/60
 
 number_of_properties = len(properties)
 number_of_axes = len(axes)
-width = axes_size[indexs['x']]
-height = axes_size[indexs['y']]
+i = {**{k: v for v, k in enumerate(properties)},**{k: v for v, k in enumerate(axes)}}
+width = axes_size[i['x']]
+height = axes_size[i['y']]
 
 from setproctitle import setproctitle
 setproctitle('particle thingo')
@@ -36,19 +37,19 @@ if placement is 'vortex':
         poop = random_integer(0,height - 1)
         for axis_index, axis in enumerate(axes):
             # Randomise position
-            particle[axis_index][indexs['position']] = poop
+            particle[axis_index][i['position']] = poop
 
-        particle[indexs['y']][indexs['velocity']] = -2 * (particle[indexs['y']][indexs['position']] - width/2)
-        particle[indexs['x']][indexs['velocity']] = 2* (particle[indexs['x']][indexs['position']] - height/2)
+        particle[i['y']][i['velocity']] = -2 * (particle[i['y']][i['position']] - width/2)
+        particle[i['x']][i['velocity']] = 2* (particle[i['x']][i['position']] - height/2)
 elif placement is 'normal':
     for particle in particle_list:
         # Set acceleration
-        particle[indexs['y']][indexs['acceleration']] = 100
+        particle[i['y']][i['acceleration']] = 100
         for axis_index, axis in enumerate(axes):
             # Randomise position
-            particle[axis_index][indexs['position']] = random_integer(0,axes_size[axis_index] - 1)
+            particle[axis_index][i['position']] = random_integer(0,axes_size[axis_index] - 1)
             # Randomise velocity
-            particle[axis_index][indexs['velocity']] = random_integer(-1000000,1000000)/10000
+            particle[axis_index][i['velocity']] = random_integer(-1000000,1000000)/10000
 
 print('Creating particle map')
 
@@ -56,8 +57,8 @@ print('Creating particle map')
 particle_map_flat = RawArray('I', width * height)
 particle_map = frombuffer(particle_map_flat, dtype='I').reshape((width,height))
 for particle_index, particle in enumerate(particle_list):
-    x_position = int(particle[indexs['x']][indexs['position']])
-    y_position = int(particle[indexs['y']][indexs['position']])
+    x_position = int(particle[i['x']][i['position']])
+    y_position = int(particle[i['y']][i['position']])
     particle_map[x_position][y_position] = particle_index + 1
 
 print('Initialising physics threads')
@@ -70,7 +71,7 @@ frame_queue = [None] * physics_cpus
 phyics_process = [None] * physics_cpus
 for cpu_core in range(physics_cpus):
     frame_queue[cpu_core] = Queue()
-    phyics_process[cpu_core] = Physics_Thread(frame_queue[cpu_core], particle_list, particle_map, axes, indexs)
+    phyics_process[cpu_core] = Physics_Thread(frame_queue[cpu_core], particle_list, particle_map, axes, i)
 
 print('Starting display')
 
@@ -91,16 +92,15 @@ for process in phyics_process:
 from timeit import default_timer as current_time
 from time import sleep
 from numpy import where
-update_interval = 1/60
 running = True
 
 input('Loaded, press enter to start main loop')
 
 # Update the time since update to just before it starts
+previous_update = current_time()
 for particle in particle_list:
     for axis in particle:
-        axis[indexs['time of update']] = current_time()
-previous_update = current_time()
+        axis[i['time of update']] = previous_update
 
 # Main loop
 while running:
