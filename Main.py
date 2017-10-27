@@ -3,10 +3,10 @@ print('Started')
 number_of_particles = 1
 properties = ['position','velocity','time of update','acceleration']
 axes = ['x','y']
-axes_size = [100,100]
+axes_size = [30,30]
 placement = 'normal'
 
-window_scaling = 8
+window_scaling = 10
 particle_color = 0xFFFFFF
 update_interval = 1/60
 
@@ -15,9 +15,6 @@ number_of_axes = len(axes)
 i = {**{k: v for v, k in enumerate(properties)},**{k: v for v, k in enumerate(axes)}}
 width = axes_size[i['x']]
 height = axes_size[i['y']]
-
-from setproctitle import setproctitle
-setproctitle('particle thingo')
 
 print('Creating shared memory')
 
@@ -55,7 +52,7 @@ print('Creating particle map')
 
 # Create particle map
 particle_map_flat = RawArray('I', width * height)
-particle_map = frombuffer(particle_map_flat, dtype='I').reshape((width,height))
+particle_map = frombuffer(particle_map_flat, dtype='i').reshape((width,height))
 for particle_index, particle in enumerate(particle_list):
     x_position = int(particle[i['x']][i['position']])
     y_position = int(particle[i['y']][i['position']])
@@ -108,6 +105,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    # Erase debug particles
+    particle_map[particle_map < 0] = 0
     # Request new frame from physics processes
     for cpu_core in range(physics_cpus):
         frame_queue[cpu_core].put(list(range(round(number_of_particles/physics_cpus*(cpu_core)), round(number_of_particles/physics_cpus*(cpu_core+1)))))

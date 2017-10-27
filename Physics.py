@@ -1,6 +1,5 @@
 from timeit import default_timer as current_time
 from multiprocessing import Process
-from setproctitle import setproctitle
 from numpy import sign
 
 class Physics_Thread (Process):
@@ -17,8 +16,6 @@ class Physics_Thread (Process):
         self.size = [particle_map.shape[0] -1, particle_map.shape[1] -1]
 
     def run(self):
-        # Sets the process name, can't be in init for some reason
-        setproctitle(self.name)
         print(self.name+' ready')
         # Less spag bowl (and great variable naming)
         i = self.indexs
@@ -68,7 +65,7 @@ class Physics_Thread (Process):
                     if 0 in final:
                         slope = [0,0]
                     else:
-                        slope = [final[0]/final[1],final[1]/final[0]]
+                        slope = [final[1]/final[0],final[0]/final[1]]
                     lmao = 0 if abs(final[1]) < abs(final[0]) else 1
                     move_distance = [0,0]
                     # Check each coordinate for an obstruction
@@ -82,22 +79,23 @@ class Physics_Thread (Process):
                                 # Reverse direction
                                 self.particle_list[particle_index][axis_index][i['velocity']] = -self.particle_list[particle_index][axis_index][i['velocity']]
                                 # Move back inside wall range
-                                move_distance[axis_index] = previous_point[axis_index]
+                                move_distance = previous_point
                                 # Stop checking coordinates
                                 final[lmao] = coord[lmao]
                         # Check for collisions with particles
                         hit_particle = self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + move_distance[i['x']]), int(self.particle_list[particle_index][i['y']][i['position']] + move_distance[i['y']])]
-                        if hit_particle != 0:
+                        if hit_particle > 0 and hit_particle-1 != particle_index:
                             # Swap velocities
                             self.particle_list[hit_particle - 1][axis_index][i['velocity']], self.particle_list[particle_index][axis_index][i['velocity']] = self.particle_list[particle_index][axis_index][i['velocity']], self.particle_list[hit_particle - 1][axis_index][i['velocity']]
                             # Move back one point
                             move_distance = previous_point
-                            break
+                            # Stop checking coordinates
+                            final[lmao] = coord[lmao]
+                        # Create a debug particle to show where it's checking
+                        self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + move_distance[i['x']]), int(self.particle_list[particle_index][i['y']][i['position']] + move_distance[i['y']])] = -1
                     # Adjust for lost time
                     for axis_index, particle_axis in enumerate(final):
-                        #print(particle_axis,move_distance[i[axis_index]], particle_axis - move_distance[i[axis_index]])
-                        self.particle_list[particle_index][axis_index][i['time of update']] = self.particle_list[particle_index][axis_index][i['time of update']] - abs(particle_axis - move_distance[axis_index]) / abs(self.particle_list[particle_index][axis_index][i['velocity']])
-
+                        self.particle_list[particle_index][axis_index][i['time of update']] = self.particle_list[particle_index][axis_index][i['time of update']] + abs(particle_axis - move_distance[axis_index]) / abs(self.particle_list[particle_index][axis_index][i['velocity']])
                     # Update map
                     self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']])][int(self.particle_list[particle_index][i['y']][i['position']])] = 0
                     self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + int(move_distance[i['x']]))][int(self.particle_list[particle_index][i['y']][i['position']] + int(move_distance[i['y']]))] = particle_index + 1
