@@ -1,9 +1,9 @@
 print('Started')
 
-number_of_particles = 1
+number_of_particles = 1000
 properties = ['position','velocity','time of update','acceleration']
 axes = ['x','y']
-axes_size = [30,30]
+axes_size = [50,50]
 placement = 'normal'
 
 window_scaling = 10

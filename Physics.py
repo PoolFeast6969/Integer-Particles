@@ -44,7 +44,7 @@ class Physics_Thread (Process):
                         particle_axis = self.particle_list[particle_index][axis_index] # Less spaghetti
                         if update_required:
                             # Calculate acceleration toward center sometimes
-                            #particle_axis[i['acceleration']] = 2*((self.size[axis_index]+1)/2 - particle_axis[i['position']])
+                            particle_axis[i['acceleration']] = 2*((self.size[axis_index]+1)/2 - particle_axis[i['position']])
                             # Get elapsed_time
                             elapsed_time = current_time() - particle_axis[i['time of update']]
                             # Calculate velocity
@@ -79,18 +79,19 @@ class Physics_Thread (Process):
                                 # Reverse direction
                                 self.particle_list[particle_index][axis_index][i['velocity']] = -self.particle_list[particle_index][axis_index][i['velocity']]
                                 # Move back inside wall range
+                                move_distance[axis_index] = previous_point[axis_index]
+                                # Stop checking coordinates
+                                final[lmao] = coord[lmao]
+                        if final[lmao] is not coord[lmao]:
+                            # Check for collisions with particles
+                            hit_particle = self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + move_distance[i['x']]), int(self.particle_list[particle_index][i['y']][i['position']] + move_distance[i['y']])]
+                            if hit_particle > 0 and hit_particle-1 != particle_index:
+                                # Swap velocities
+                                self.particle_list[hit_particle - 1][axis_index][i['velocity']], self.particle_list[particle_index][axis_index][i['velocity']] = self.particle_list[particle_index][axis_index][i['velocity']], self.particle_list[hit_particle - 1][axis_index][i['velocity']]
+                                # Move back one point
                                 move_distance = previous_point
                                 # Stop checking coordinates
                                 final[lmao] = coord[lmao]
-                        # Check for collisions with particles
-                        hit_particle = self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + move_distance[i['x']]), int(self.particle_list[particle_index][i['y']][i['position']] + move_distance[i['y']])]
-                        if hit_particle > 0 and hit_particle-1 != particle_index:
-                            # Swap velocities
-                            self.particle_list[hit_particle - 1][axis_index][i['velocity']], self.particle_list[particle_index][axis_index][i['velocity']] = self.particle_list[particle_index][axis_index][i['velocity']], self.particle_list[hit_particle - 1][axis_index][i['velocity']]
-                            # Move back one point
-                            move_distance = previous_point
-                            # Stop checking coordinates
-                            final[lmao] = coord[lmao]
                         # Create a debug particle to show where it's checking
                         self.particle_map[int(self.particle_list[particle_index][i['x']][i['position']] + move_distance[i['x']]), int(self.particle_list[particle_index][i['y']][i['position']] + move_distance[i['y']])] = -1
                     # Adjust for lost time
